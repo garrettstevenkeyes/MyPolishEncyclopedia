@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WordsView: View {
-    @ObservedObject var viewModel: AppViewModel
+    var viewModel: AppViewModel
 
     var body: some View {
         Group {
@@ -30,7 +30,7 @@ struct WordsView: View {
 
 private struct WordRow: View {
     let entry: PolishEntry
-    @ObservedObject var viewModel: AppViewModel
+    var viewModel: AppViewModel
 
     var body: some View {
         HStack {

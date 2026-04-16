@@ -1,12 +1,14 @@
 import Foundation
+import Observation
 
+@Observable
 @MainActor
-class AppViewModel: ObservableObject {
-    @Published var words: [PolishEntry] = []
-    @Published var phrases: [PolishEntry] = []
-    @Published var isTranslating = false
-    @Published var errorMessage: String?
-    @Published var loadingAudioIDs: Set<UUID> = []
+class AppViewModel {
+    var words: [PolishEntry] = []
+    var phrases: [PolishEntry] = []
+    var isTranslating = false
+    var errorMessage: String?
+    var loadingAudioIDs: Set<UUID> = []
 
     private let storage = StorageService()
     private let translator = TranslationService()

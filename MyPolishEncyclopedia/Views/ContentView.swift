@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var viewModel = AppViewModel()
+    @State private var viewModel = AppViewModel()
     @State private var selectedTab: Tab = .words
 
     enum Tab {

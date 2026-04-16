@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PhrasesView: View {
-    @ObservedObject var viewModel: AppViewModel
+    var viewModel: AppViewModel
 
     var body: some View {
         Group {
@@ -30,7 +30,7 @@ struct PhrasesView: View {
 
 private struct PhraseRow: View {
     let entry: PolishEntry
-    @ObservedObject var viewModel: AppViewModel
+    var viewModel: AppViewModel
 
     var body: some View {
         HStack(alignment: .center) {

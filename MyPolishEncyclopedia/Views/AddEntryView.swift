@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AddEntryView: View {
-    @ObservedObject var viewModel: AppViewModel
+    var viewModel: AppViewModel
 
     @State private var inputText = ""
     @State private var selectedType: EntryType = .word
