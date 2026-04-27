@@ -41,10 +41,23 @@ struct AddEntryView: View {
             }
 
             if let error = viewModel.errorMessage {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(alignment: .top, spacing: 8) {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+
+                    Button {
+                        viewModel.clearError()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                            .imageScale(.small)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Dismiss error")
+                }
             }
         }
         .padding(12)

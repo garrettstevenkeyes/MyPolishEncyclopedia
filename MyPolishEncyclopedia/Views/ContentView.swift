@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct ContentView: View {
@@ -35,8 +36,22 @@ struct ContentView: View {
 
             // Add entry
             AddEntryView(viewModel: viewModel)
+
+            Divider()
+
+            HStack {
+                Spacer()
+                Button("Quit") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .keyboardShortcut("q", modifiers: .command)
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
         }
-        .frame(width: 380, height: 480)
+        .frame(width: 380, height: 520)
         .onAppear { viewModel.loadEntries() }
     }
 }

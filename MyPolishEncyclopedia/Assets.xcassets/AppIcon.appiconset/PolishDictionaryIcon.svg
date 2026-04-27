@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="128" y1="72" x2="896" y2="952" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f7fbff"/>
+      <stop offset="1" stop-color="#dce8f7"/>
+    </linearGradient>
+    <linearGradient id="cover" x1="268" y1="164" x2="760" y2="852" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d53d47"/>
+      <stop offset="1" stop-color="#9e1f30"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <path d="M268 164h396c74 0 134 60 134 134v512c0 28-22 50-50 50H268c-33 0-60-27-60-60V224c0-33 27-60 60-60Z" fill="#243247" opacity=".18"/>
+  <path d="M268 132h396c74 0 134 60 134 134v512c0 28-22 50-50 50H268c-33 0-60-27-60-60V192c0-33 27-60 60-60Z" fill="url(#cover)"/>
+  <path d="M278 132h78v696h-78z" fill="#7d1627" opacity=".55"/>
+  <path d="M356 132h38v696h-38z" fill="#ffffff" opacity=".17"/>
+  <path d="M404 206h268c31 0 56 25 56 56v312c0 31-25 56-56 56H404z" fill="#f9fbff" opacity=".95"/>
+  <path d="M404 260h274M404 334h274M404 408h274M404 482h274" stroke="#c5cfdd" stroke-width="18" stroke-linecap="round"/>
+  <path d="M208 742h540c28 0 50 22 50 50v16c0 28-22 50-50 50H268c-33 0-60-27-60-60z" fill="#f6f1e7"/>
+  <path d="M274 786h470" stroke="#c7bfae" stroke-width="20" stroke-linecap="round"/>
+  <text x="566" y="716" text-anchor="middle" font-family="Avenir Next, Helvetica, Arial, sans-serif" font-size="118" font-weight="800" fill="#ffffff">Polish</text>
+</svg>

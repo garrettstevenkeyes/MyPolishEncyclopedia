@@ -2,13 +2,18 @@ import AVFoundation
 import Foundation
 
 enum ElevenLabsError: Error, LocalizedError {
-    case badResponse(Int)
+    case badResponse(Int, String)
     case noAudioData
 
     var errorDescription: String? {
         switch self {
-        case .badResponse(let code): return "ElevenLabs API returned status \(code)"
-        case .noAudioData: return "No audio data received"
+        case .badResponse(let code, let message):
+            if message.isEmpty {
+                return "ElevenLabs API returned status \(code)"
+            }
+            return "ElevenLabs API returned status \(code): \(message)"
+        case .noAudioData:
+            return "No audio data received"
         }
     }
 }
@@ -37,7 +42,8 @@ actor ElevenLabsService {
         let (data, response) = try await URLSession.shared.data(for: request)
         let httpResponse = response as! HTTPURLResponse
         guard httpResponse.statusCode == 200 else {
-            throw ElevenLabsError.badResponse(httpResponse.statusCode)
+            let message = String(data: data, encoding: .utf8) ?? ""
+            throw ElevenLabsError.badResponse(httpResponse.statusCode, message)
         }
         guard !data.isEmpty else { throw ElevenLabsError.noAudioData }
         return data

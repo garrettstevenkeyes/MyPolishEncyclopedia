@@ -34,14 +34,27 @@ class AppViewModel {
 
         do {
             let polish = try await translator.translate(english: trimmed)
-            let entry = PolishEntry(english: trimmed, polish: polish, type: type)
+            let entryType: EntryType = extractedWords(from: trimmed).count > 1 ? .phrase : type
+            let entry = PolishEntry(english: trimmed, polish: polish, type: entryType)
 
-            switch type {
+            switch entryType {
             case .word:   words.insert(entry, at: 0)
             case .phrase: phrases.insert(entry, at: 0)
             }
 
+            var wordError: Error?
+            if entryType == .phrase {
+                do {
+                    try await addWords(from: trimmed)
+                } catch {
+                    wordError = error
+                }
+            }
+
             try storage.save(allEntries)
+            if let wordError {
+                errorMessage = "Phrase saved, but words could not be added: \(wordError.localizedDescription)"
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -78,10 +91,41 @@ class AppViewModel {
         }
     }
 
+    func clearError() {
+        errorMessage = nil
+    }
+
     // MARK: - Private
 
     private var allEntries: [PolishEntry] {
         (words + phrases).sorted { $0.createdAt < $1.createdAt }
+    }
+
+    private func addWords(from phrase: String) async throws {
+        let phraseWords = extractedWords(from: phrase)
+        let existingWords = Set(words.map { $0.english.lowercased() })
+        let missingWords = phraseWords.filter { !existingWords.contains($0.lowercased()) }
+        guard !missingWords.isEmpty else { return }
+
+        let translations = try await translator.translateWords(missingWords)
+        for english in missingWords.reversed() {
+            let polish = translations[english.lowercased()] ?? translations[english] ?? english
+            words.insert(PolishEntry(english: english, polish: polish, type: .word), at: 0)
+        }
+    }
+
+    private func extractedWords(from text: String) -> [String] {
+        let pattern = #"[A-Za-z]+(?:['-][A-Za-z]+)?"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        var seen: Set<String> = []
+
+        return regex.matches(in: text, range: range).compactMap { match in
+            guard let matchRange = Range(match.range, in: text) else { return nil }
+            let word = String(text[matchRange]).lowercased()
+            guard seen.insert(word).inserted else { return nil }
+            return word
+        }
     }
 
     private func updateAudioCache(for id: UUID, data: Data) {
