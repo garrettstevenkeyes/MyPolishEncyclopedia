@@ -43,6 +43,7 @@ private struct PhraseRow: View {
             }
             Spacer()
             playButton
+            deleteButton
         }
         .padding(.vertical, 2)
     }
@@ -63,5 +64,17 @@ private struct PhraseRow: View {
             .buttonStyle(.plain)
             .frame(width: 28, height: 28)
         }
+    }
+
+    private var deleteButton: some View {
+        Button {
+            viewModel.deleteEntry(entry)
+        } label: {
+            Image(systemName: "trash")
+                .foregroundStyle(.red)
+        }
+        .buttonStyle(.plain)
+        .frame(width: 28, height: 28)
+        .help("Delete phrase")
     }
 }
