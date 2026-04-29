@@ -9,16 +9,19 @@ class AppViewModel {
     var isTranslating = false
     var errorMessage: String?
     var loadingAudioIDs: Set<UUID> = []
+    var dailySession = DailySession.empty
 
     private let storage = StorageService()
     private let translator = TranslationService()
     private let elevenLabs = ElevenLabsService()
+    private let dailySessionKey = "dailySession"
 
     func loadEntries() {
         do {
             let all = try storage.load()
             words   = all.filter { $0.type == .word  }.sorted { $0.createdAt > $1.createdAt }
             phrases = all.filter { $0.type == .phrase }.sorted { $0.createdAt > $1.createdAt }
+            prepareDailySession()
         } catch {
             errorMessage = "Failed to load entries: \(error.localizedDescription)"
         }
@@ -39,7 +42,9 @@ class AppViewModel {
 
             switch entryType {
             case .word:   words.insert(entry, at: 0)
-            case .phrase: phrases.insert(entry, at: 0)
+            case .phrase:
+                phrases.insert(entry, at: 0)
+                prepareDailySession()
             }
 
             var wordError: Error?
@@ -84,6 +89,7 @@ class AppViewModel {
     func deleteEntry(_ entry: PolishEntry) {
         words.removeAll   { $0.id == entry.id }
         phrases.removeAll { $0.id == entry.id }
+        prepareDailySession()
         do {
             try storage.save(allEntries)
         } catch {
@@ -93,6 +99,46 @@ class AppViewModel {
 
     func clearError() {
         errorMessage = nil
+    }
+
+    var dailyEntries: [PolishEntry] {
+        dailySession.phraseIDs.compactMap { id in
+            phrases.first { $0.id == id }
+        }
+    }
+
+    var currentDailyEntry: PolishEntry? {
+        let entries = dailyEntries
+        guard dailySession.currentIndex < entries.count else { return nil }
+        return entries[dailySession.currentIndex]
+    }
+
+    var dailyScore: Int {
+        dailySession.results.filter { $0.grade == .gotIt }.count
+    }
+
+    var dailyIsComplete: Bool {
+        !dailyEntries.isEmpty && dailySession.currentIndex >= dailyEntries.count
+    }
+
+    func revealDailyAnswer() {
+        dailySession.isAnswerRevealed = true
+        saveDailySession()
+    }
+
+    func gradeDailyAnswer(_ grade: DailyGrade) {
+        guard dailySession.currentIndex < dailyEntries.count else { return }
+        let phraseID = dailyEntries[dailySession.currentIndex].id
+        dailySession.results.removeAll { $0.phraseID == phraseID }
+        dailySession.results.append(DailyResult(phraseID: phraseID, grade: grade))
+        dailySession.currentIndex += 1
+        dailySession.isAnswerRevealed = false
+        saveDailySession()
+    }
+
+    func restartDailySession() {
+        dailySession = makeDailySession()
+        saveDailySession()
     }
 
     // MARK: - Private
@@ -135,4 +181,87 @@ class AppViewModel {
             phrases[i].audioData = data
         }
     }
+
+    private func prepareDailySession() {
+        let today = Self.dayKey(for: Date())
+        dailySession = loadDailySession() ?? makeDailySession()
+
+        if dailySession.dayKey != today {
+            dailySession = makeDailySession()
+        } else {
+            let availablePhraseIDs = Set(phrases.map(\.id))
+            dailySession.phraseIDs = dailySession.phraseIDs.filter { availablePhraseIDs.contains($0) }
+            dailySession.results = dailySession.results.filter { availablePhraseIDs.contains($0.phraseID) }
+            if dailySession.phraseIDs.isEmpty && !phrases.isEmpty {
+                dailySession = makeDailySession()
+            } else if dailySession.currentIndex > dailySession.phraseIDs.count {
+                dailySession.currentIndex = dailySession.phraseIDs.count
+            }
+        }
+
+        saveDailySession()
+    }
+
+    private func makeDailySession() -> DailySession {
+        DailySession(
+            dayKey: Self.dayKey(for: Date()),
+            phraseIDs: Array(phrases.shuffled().prefix(5).map(\.id)),
+            currentIndex: 0,
+            isAnswerRevealed: false,
+            results: []
+        )
+    }
+
+    private func loadDailySession() -> DailySession? {
+        guard let data = UserDefaults.standard.data(forKey: dailySessionKey) else { return nil }
+        return try? JSONDecoder().decode(DailySession.self, from: data)
+    }
+
+    private func saveDailySession() {
+        guard let data = try? JSONEncoder().encode(dailySession) else { return }
+        UserDefaults.standard.set(data, forKey: dailySessionKey)
+    }
+
+    private static func dayKey(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+}
+
+enum DailyGrade: String, Codable {
+    case gotIt
+    case almost
+    case missed
+
+    var label: String {
+        switch self {
+        case .gotIt: return "Got it"
+        case .almost: return "Almost"
+        case .missed: return "Missed"
+        }
+    }
+}
+
+struct DailyResult: Codable, Equatable {
+    var phraseID: UUID
+    var grade: DailyGrade
+}
+
+struct DailySession: Codable, Equatable {
+    var dayKey: String
+    var phraseIDs: [UUID]
+    var currentIndex: Int
+    var isAnswerRevealed: Bool
+    var results: [DailyResult]
+
+    static let empty = DailySession(
+        dayKey: "",
+        phraseIDs: [],
+        currentIndex: 0,
+        isAnswerRevealed: false,
+        results: []
+    )
 }

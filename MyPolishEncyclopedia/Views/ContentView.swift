@@ -6,13 +6,14 @@ struct ContentView: View {
     @State private var selectedTab: Tab = .words
 
     enum Tab {
-        case words, phrases
+        case daily, words, phrases
     }
 
     var body: some View {
         VStack(spacing: 0) {
             // Tab picker
             Picker("View", selection: $selectedTab) {
+                Text("Daily").tag(Tab.daily)
                 Text("Garrett's Words").tag(Tab.words)
                 Text("Garrett's Phrases").tag(Tab.phrases)
             }
@@ -24,7 +25,9 @@ struct ContentView: View {
 
             // Entry list
             Group {
-                if selectedTab == .words {
+                if selectedTab == .daily {
+                    DailyView(viewModel: viewModel)
+                } else if selectedTab == .words {
                     WordsView(viewModel: viewModel)
                 } else {
                     PhrasesView(viewModel: viewModel)
@@ -51,7 +54,7 @@ struct ContentView: View {
             .padding(.horizontal, 12)
             .padding(.bottom, 8)
         }
-        .frame(width: 380, height: 520)
+        .frame(width: 380, height: 560)
         .onAppear { viewModel.loadEntries() }
     }
 }
